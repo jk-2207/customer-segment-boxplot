@@ -2,12 +2,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from PIL import Image
 
 # ---------------------------------------------------------
-# Synthetic customer purchase data for different segments
+# Synthetic customer purchase data by segment
 # ---------------------------------------------------------
-
-# Random seed for reproducibility
 np.random.seed(42)
 
 segments = ["Budget", "Regular", "Premium", "VIP"]
@@ -17,18 +16,17 @@ data = []
 
 for segment in segments:
     if segment == "Budget":
-        # Lower spend, tighter spread
         purchases = np.random.lognormal(mean=2.5, sigma=0.35, size=n_customers_per_segment)
     elif segment == "Regular":
         purchases = np.random.lognormal(mean=3.0, sigma=0.4, size=n_customers_per_segment)
     elif segment == "Premium":
         purchases = np.random.lognormal(mean=3.5, sigma=0.45, size=n_customers_per_segment)
-    else:  # VIP
+    else:
         purchases = np.random.lognormal(mean=4.0, sigma=0.5, size=n_customers_per_segment)
 
-    # Add a few high-spend outliers per segment
+    # Add occasional outliers
     outliers = np.random.choice([0, 0, 0, 1], size=n_customers_per_segment)
-    purchases = purchases + outliers * np.random.uniform(300, 800, size=n_customers_per_segment)
+    purchases += outliers * np.random.uniform(300, 800, size=n_customers_per_segment)
 
     for amt in purchases:
         data.append({"Customer_Segment": segment, "Purchase_Amount": amt})
@@ -36,19 +34,15 @@ for segment in segments:
 df = pd.DataFrame(data)
 
 # ---------------------------------------------------------
-# Seaborn styling (professional look)
+# Styling
 # ---------------------------------------------------------
-
 sns.set_style("whitegrid")
-sns.set_context("talk")  # suitable for presentations
+sns.set_context("talk")
 
 # ---------------------------------------------------------
-# Create the figure and boxplot
+# Create boxplot (any size is fine now)
 # ---------------------------------------------------------
-
-# 8x8 inches with dpi=64 → 512x512 pixels
-plt.figure(figsize=(8, 8))
-
+plt.figure(figsize=(8, 8))  # initial canvas (not final size)
 ax = sns.boxplot(
     data=df,
     x="Customer_Segment",
@@ -56,23 +50,19 @@ ax = sns.boxplot(
     palette="viridis"
 )
 
-ax.set_title(
-    "Customer Purchase Amount Distribution by Segment",
-    pad=16,
-    fontsize=18
-)
+ax.set_title("Customer Purchase Amount Distribution by Segment", pad=16)
 ax.set_xlabel("Customer Segment")
 ax.set_ylabel("Purchase Amount ($)")
-
-# Rotate x-axis labels slightly for readability
 plt.xticks(rotation=10)
-
-# Tight layout for clean spacing
 plt.tight_layout()
 
-# ---------------------------------------------------------
-# Save chart as 512x512 PNG
-# ---------------------------------------------------------
-
-plt.savefig("chart.png", dpi=64, bbox_inches="tight")
+# Save temporary chart
+plt.savefig("chart_temp.png", dpi=100)
 plt.close()
+
+# ---------------------------------------------------------
+# FORCE FINAL OUTPUT TO EXACTLY 512x512 PIXELS
+# ---------------------------------------------------------
+img = Image.open("chart_temp.png")
+final_img = img.resize((512, 512), Image.LANCZOS)
+final_img.save("chart.png")
